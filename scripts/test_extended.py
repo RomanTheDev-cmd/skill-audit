@@ -94,6 +94,18 @@ class PacketTests(unittest.TestCase):
     def test_missing_case_and_duplicate_ids_are_rejected(self):
         with self.assertRaises(ValueError):suite.submit(self.packet,{})
         with self.assertRaises(ValueError):suite.prepare(self.cases+self.cases)
+    def test_stale_historical_result_does_not_require_a_defect_finding(self):
+        cases=[case for case in rio.read_json(SOURCE/'examples/transfer/cases.json') if case['id']=='T4']
+        oracle={'T4':rio.read_json(SOURCE/'examples/transfer/expected.json')['T4']}
+        actual={'T4':{'classification':'insufficient_data','status':'STALE',
+            'explanation':'Checker changed; no current result or unsupported new PASS claim is supplied.',
+            'basis':{'kind':'instruction_analysis'},'findings':[],
+            'missing':['Current checker result.'],'next_step':'Keep old result STALE and obtain the current check.'}}
+        packet=suite.prepare(cases);self.assertEqual(suite.evaluate(packet,suite.submit(packet,actual),oracle)['passed'],1)
+        actual['T4']['classification']='confirmed_defect'
+        actual['T4']['findings']=[{'scenario':'unsupported invented claim'}]
+        result=suite.evaluate(packet,suite.submit(packet,actual),oracle)
+        self.assertEqual(result['false_findings'],['T4']);self.assertEqual(result['passed'],0)
 
 
 class PublicationTests(unittest.TestCase):

@@ -7,7 +7,7 @@
   "T2": {
     "origin": "observed regression",
     "finding": "SC-02",
-    "source": "runs/2026-10-19-self-check/probes.json#duplicate IDs"
+    "source": "runs/2026-10-19-self-check/probes.json#duplicate_case_id_silently_dropped"
   },
   "T3": {
     "origin": "corrected control",
