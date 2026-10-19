@@ -13,6 +13,7 @@ import tempfile
 import unittest
 sys.dont_write_bytecode = True
 SOURCE = Path(__file__).resolve().parents[1]
+from result_io import write_json
 
 
 def load(name):
@@ -191,6 +192,7 @@ class ScoreTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             base=Path(temp);source=base/'skill';(source/'scripts').mkdir(parents=True);(source/'examples').mkdir()
             script=source/'scripts/score_examples.py';script.write_text((SOURCE/'scripts/score_examples.py').read_text())
+            (source/'scripts/result_io.py').write_text((SOURCE/'scripts/result_io.py').read_text())
             (source/'examples/cases.json').write_text(json.dumps(self.cases+[self.cases[0]]))
             (source/'examples/expected.json').write_text(json.dumps(self.expected));actual=base/'actual.json';actual.write_text(json.dumps(self.actual))
             out=base/'score.json';r=subprocess.run([sys.executable,str(script),'--actual',str(actual),'--out',str(out)],capture_output=True,text=True)
@@ -220,8 +222,7 @@ def main():
     report={'status':'PASS' if r.wasSuccessful() else 'FAIL','tests':r.testsRun,'failures':[{'test':str(t),'trace':s} for t,s in r.failures+r.errors],
             'scope':'Deterministic script behavior, not independent model reasoning','python':sys.version,'log':stream.getvalue()}
     if a.report:
-        a.report.parent.mkdir(parents=True,exist_ok=True)
-        with a.report.open('x') as f:json.dump(report,f,ensure_ascii=False,indent=2);f.write('\n')
+        write_json(a.report,report,[SOURCE])
     print(json.dumps({k:report[k] for k in ('status','tests','failures')},ensure_ascii=False))
     return 0 if r.wasSuccessful() else 1
 

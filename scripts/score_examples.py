@@ -3,6 +3,9 @@
 import argparse
 import json
 from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from result_io import read_json, write_json
 SOURCE = Path(__file__).resolve().parents[1]
 FINDINGS = {'confirmed_defect', 'possible_risk', 'optional_improvement'}
 BASIS = {'instruction_analysis', 'execution', 'visual', 'physical'}
@@ -90,14 +93,13 @@ def main():
     p.add_argument('--legacy-labels', action='store_true', help='Read old label-only decisions; no finding validation')
     a = p.parse_args(); out = Path(a.out).resolve()
     if out.is_relative_to(SOURCE): raise ValueError('results must be outside skill source')
-    expected = json.loads((SOURCE/'examples/expected.json').read_text())
-    cases = None if a.legacy_labels else json.loads((SOURCE/'examples/cases.json').read_text())
-    actual = json.loads(Path(a.actual).read_text())
+    expected = read_json(SOURCE/'examples/expected.json')
+    cases = None if a.legacy_labels else read_json(SOURCE/'examples/cases.json')
+    actual = read_json(a.actual)
     if a.legacy_labels and isinstance(actual, dict) and actual and set(actual).issubset(expected):
         expected = {k: expected[k] for k in actual}
     result = score(actual, expected, cases)
-    out.parent.mkdir(parents=True, exist_ok=True)
-    with out.open('x') as f: json.dump(result, f, ensure_ascii=False, indent=2); f.write('\n')
+    write_json(out, result, [SOURCE], [a.actual])
     print(json.dumps({k: result[k] for k in ('passed', 'total', 'mode', 'false_findings', 'missed_confirmed_defects')}, ensure_ascii=False))
     raise SystemExit(0 if result['passed'] == result['total'] else 1)
 

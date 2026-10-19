@@ -4,6 +4,9 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import sys
+sys.dont_write_bytecode = True
+from result_io import read_json, write_json
 
 SOURCE = Path(__file__).resolve().parents[1]
 LOCAL_ENV = Path.home() / '.local/share/skill-audit'
@@ -111,11 +114,7 @@ def compare(before, after):
 
 
 def save(path, data, protected_roots):
-    path = Path(path).resolve()
-    if any(path.is_relative_to(Path(r).resolve()) for r in protected_roots):
-        raise ValueError('output must be outside audited source and this skill')
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('x') as f: json.dump(data, f, ensure_ascii=False, indent=2); f.write('\n')
+    write_json(path, data, protected_roots)
 
 
 def main():
@@ -129,11 +128,11 @@ def main():
     d.add_argument('--after', required=True); d.add_argument('--out', required=True)
     args = p.parse_args()
     if args.mode == 'take':
-        data = snapshot(args.root, args.files, json.loads(Path(args.context).read_text()), args.scan, args.exclude,
-                        json.loads(Path(args.metadata).read_text()) if args.metadata else None)
+        data = snapshot(args.root, args.files, read_json(args.context), args.scan, args.exclude,
+                        read_json(args.metadata) if args.metadata else None)
         roots = [args.root, SOURCE]
     else:
-        a, b = [json.loads(Path(x).read_text()) for x in (args.before, args.after)]
+        a, b = [read_json(x) for x in (args.before, args.after)]
         data = compare(a, b); roots = [a['root'], b['root'], SOURCE]
     save(args.out, data, roots)
     print(json.dumps({'output': str(Path(args.out).resolve()), 'mode': args.mode}, ensure_ascii=False))

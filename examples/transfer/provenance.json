@@ -1,0 +1,26 @@
+{
+  "T1": {
+    "origin": "observed regression",
+    "finding": "SC-01",
+    "source": "runs/2026-10-19-self-check/probes.json#bool_to_number_context"
+  },
+  "T2": {
+    "origin": "observed regression",
+    "finding": "SC-02",
+    "source": "runs/2026-10-19-self-check/probes.json#duplicate IDs"
+  },
+  "T3": {
+    "origin": "corrected control",
+    "finding": "SC-R01",
+    "source": "runs/2026-10-19-fixes-1.1.2/regression.json"
+  },
+  "T4": {
+    "origin": "synthetic transfer"
+  },
+  "T5": {
+    "origin": "synthetic interrupted-result scenario"
+  },
+  "T6": {
+    "origin": "synthetic positive control"
+  }
+}

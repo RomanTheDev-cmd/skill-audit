@@ -1,0 +1,69 @@
+{
+  "T1": {
+    "classification": "confirmed_defect",
+    "status": "FAIL",
+    "explanation": "Тип настройки меняет ветку checker, но diff скрывает изменение. Исправить сравнение типов; одинаковое bool-значение оставить неизменным.",
+    "must_cite": [
+      "before.json:1",
+      "after.json:1",
+      "checker.py:1",
+      "diff.json:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "T2": {
+    "classification": "confirmed_defect",
+    "status": "FAIL",
+    "explanation": "Преобразование молча теряет сценарий с повторным ID. Отклонить повтор до построения словаря; уникальный набор сохраняет знаменатель.",
+    "must_cite": [
+      "cases.json:1",
+      "score.json:1",
+      "score.py:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "T3": {
+    "classification": "no_issue",
+    "status": "NO_CHANGE",
+    "explanation": "Механизм сохраняет прежнюю неполноту и требует явного принятия нового baseline. Правка не нужна.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "T4": {
+    "classification": "confirmed_defect",
+    "status": "STALE",
+    "explanation": "Значимый checker изменён; прежний PASS не подтверждает текущую проверку. Неизменный вход сам недостаточен.",
+    "must_cite": [
+      "old.json:1",
+      "current.json:1",
+      "policy.md:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "T5": {
+    "classification": "insufficient_data",
+    "status": "UNKNOWN",
+    "explanation": "Частичный JSON и отсутствие завершения не доказывают результат; запросить полный первичный отчёт/статус процесса. Нельзя заключить, что сама проверяемая вещь неисправна.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "T6": {
+    "classification": "no_issue",
+    "status": "PASS",
+    "explanation": "Значимые входы и доказательство совпали, срока действия нет. Смена описательной даты не требует повтора.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  }
+}

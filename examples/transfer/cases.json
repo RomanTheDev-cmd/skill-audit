@@ -1,0 +1,101 @@
+[
+  {
+    "id": "T1",
+    "scenario": "Переиспользовать результат после изменения настройки.",
+    "sources": {
+      "before.json": [
+        "{\"mode\":true}"
+      ],
+      "after.json": [
+        "{\"mode\":1}"
+      ],
+      "checker.py": [
+        "return \"automatic\" if mode is True else \"fixed-count\""
+      ],
+      "diff.json": [
+        "{\"context_changed\":false,\"assessment\":\"NO_RECORDED_CHANGE\"}"
+      ]
+    },
+    "available": "Файлы относятся к одному сравнению; оба режима использованы этим checker."
+  },
+  {
+    "id": "T2",
+    "scenario": "Оценить полноту набора сценариев по итоговому счёту.",
+    "sources": {
+      "cases.json": [
+        "13 входных сценариев; ID C1 встречается дважды у разных сценариев."
+      ],
+      "score.json": [
+        "passed=12; total=12"
+      ],
+      "score.py": [
+        "source_cases = {c[\"id\"]: c for c in cases}"
+      ]
+    },
+    "available": "Два сценария C1 имеют разные входы; список записей перед преобразованием сохранён."
+  },
+  {
+    "id": "T3",
+    "scenario": "Решить, нужна ли правка правила после восстановления доступа.",
+    "sources": {
+      "before.json": [
+        "coverage_issues=[{\"path\":\"later\",\"reason\":\"missing\"}]"
+      ],
+      "after.json": [
+        "coverage_issues=[]; later обследован и пуст."
+      ],
+      "diff.json": [
+        "assessment=INCOMPLETE; rebaseline_required=true; before_coverage_issues сохранены."
+      ],
+      "rules.md": [
+        "После анализа ранее пропущенной области явно принять полный after как новый baseline."
+      ]
+    },
+    "available": "Сценарий относится к актуальной версии механизма снимков."
+  },
+  {
+    "id": "T4",
+    "scenario": "Вновь заявить результат неизменённого входного файла.",
+    "sources": {
+      "old.json": [
+        "PASS; input_sha256=A; checker_sha256=X"
+      ],
+      "current.json": [
+        "input_sha256=A; checker_sha256=Y"
+      ],
+      "policy.md": [
+        "Значимые зависимости: input и checker."
+      ]
+    },
+    "available": "Хеши X и Y различаются. В отчёте нет результата запуска Y."
+  },
+  {
+    "id": "T5",
+    "scenario": "Подтвердить готовность по файлу после остановки процесса.",
+    "sources": {
+      "report.json": [
+        "{\"status\":"
+      ],
+      "run.log": [
+        "Процесс остановлен до получения кода завершения."
+      ]
+    },
+    "available": "Остальные первичные результаты и сведения о фактическом завершении отсутствуют."
+  },
+  {
+    "id": "T6",
+    "scenario": "Оценить актуальность прежнего результата после новой даты описания.",
+    "sources": {
+      "before.json": [
+        "input_sha256=A; checker_sha256=X; artifact_sha256=P; metadata.date=old"
+      ],
+      "after.json": [
+        "input_sha256=A; checker_sha256=X; artifact_sha256=P; metadata.date=new"
+      ],
+      "policy.md": [
+        "Для данного критерия срок действия не задан; зависимости — input, checker, artifact."
+      ]
+    },
+    "available": "Все три указанных хеша заново сверены и совпадают. Других значимых изменений не выявлено."
+  }
+]
