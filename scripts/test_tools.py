@@ -61,12 +61,47 @@ class SnapshotTests(unittest.TestCase):
         a=self.take();b=self.take();b['context']['expiry']='changed';self.assertTrue(snap.compare(a,b)['context_changed'])
     def test_changed_tool_context_is_named(self):
         a=self.take();b=self.take();b['context']['tool']='2';self.assertEqual(snap.compare(a,b)['context_changed_keys'],['tool'])
+    def test_bool_number_context_changes_are_detected_at_each_depth(self):
+        for before,after in [(True,1),(0,False),({'mode':True},{'mode':1}),([{'mode':False}],[{'mode':0}])]:
+            with self.subTest(before=before,after=after):
+                a=self.take();b=self.take();a['context']['setting']=before;b['context']['setting']=after
+                r=snap.compare(a,b);self.assertEqual(r['assessment'],'CHANGED');self.assertEqual(r['context_changed_keys'],['setting'])
+    def test_identical_typed_context_and_reordered_object_are_unchanged(self):
+        for value in [True,1,False,0,None,{'nested':[True,0]}]:
+            with self.subTest(value=value):
+                a=self.take();a['context']['setting']=value
+                self.assertEqual(snap.compare(a,copy.deepcopy(a))['assessment'],'NO_RECORDED_CHANGE')
+        a=self.take();b=self.take();a['context']['setting']={'a':True,'b':1};b['context']['setting']={'b':1,'a':True}
+        self.assertEqual(snap.compare(a,b)['assessment'],'NO_RECORDED_CHANGE')
+    def test_missing_context_key_and_null_are_different(self):
+        a=self.take();b=self.take();b['context']['setting']=None
+        self.assertEqual(snap.compare(a,b)['context_changed_keys'],['setting'])
     def test_expanded_scope_is_named(self):
         self.assertTrue(snap.compare(self.take(),self.take(scans=['scripts']))['scope_changed'])
     def test_missing_explicit_input_is_incomplete(self):
         a=self.take();(self.root/'rule.md').unlink();r=snap.compare(a,self.take());self.assertEqual(r['assessment'],'INCOMPLETE');self.assertEqual(r['changed'],['rule.md'])
     def test_missing_scan_directory_is_incomplete(self):
         a=self.take();r=snap.compare(a,self.take(scans=['absent']));self.assertEqual(r['assessment'],'INCOMPLETE');self.assertTrue(r['coverage_issues'])
+    def test_recovered_empty_scan_keeps_incomplete_baseline_visible(self):
+        a=self.take(scans=['absent']);(self.root/'absent').mkdir();b=self.take(scans=['absent']);r=snap.compare(a,b)
+        self.assertEqual(r['assessment'],'INCOMPLETE');self.assertEqual(r['before_coverage_issues'],a['coverage_issues'])
+        self.assertEqual(r['after_coverage_issues'],[]);self.assertEqual(r['coverage_issues'],[])
+        self.assertTrue(r['coverage_changed']);self.assertTrue(r['rebaseline_required'])
+    def test_accepted_complete_baseline_does_not_force_another_audit(self):
+        (self.root/'absent').mkdir();a=self.take(scans=['absent']);r=snap.compare(a,self.take(scans=['absent']))
+        self.assertEqual(r['assessment'],'NO_RECORDED_CHANGE');self.assertFalse(r['rebaseline_required']);self.assertFalse(r['coverage_changed'])
+    def test_legacy_incomplete_file_baseline_is_not_silently_reused(self):
+        a=self.take();a.pop('coverage_issues');a['files']['rule.md']={'status':'UNREADABLE'}
+        r=snap.compare(a,self.take());self.assertEqual(r['assessment'],'INCOMPLETE');self.assertTrue(r['rebaseline_required'])
+        self.assertEqual(r['before_coverage_issues'],[{'path':'rule.md','reason':'UNREADABLE'}])
+    def test_recovered_scan_still_reports_newly_visible_files(self):
+        a=self.take(scans=['absent']);(self.root/'absent').mkdir();(self.root/'absent/new.md').write_text('new')
+        r=snap.compare(a,self.take(scans=['absent']));self.assertEqual(r['assessment'],'INCOMPLETE');self.assertEqual(r['added'],['absent/new.md'])
+        b=self.take(scans=['absent']);(self.root/'absent/new.md').write_text('changed')
+        r=snap.compare(b,self.take(scans=['absent']));self.assertEqual(r['assessment'],'CHANGED');self.assertEqual(r['changed'],['absent/new.md'])
+    def test_unchanged_incomplete_baseline_remains_incomplete(self):
+        a=self.take(scans=['absent']);r=snap.compare(a,self.take(scans=['absent']))
+        self.assertEqual(r['assessment'],'INCOMPLETE');self.assertFalse(r['coverage_changed']);self.assertTrue(r['rebaseline_required'])
     def test_directory_instead_of_file_is_not_current_success(self):
         a=self.take();(self.root/'rule.md').unlink();(self.root/'rule.md').mkdir();r=snap.compare(a,self.take());self.assertEqual(r['assessment'],'INCOMPLETE')
     def test_unreadable_file_is_reported_as_incomplete(self):
@@ -146,6 +181,35 @@ class ScoreTests(unittest.TestCase):
     def test_missing_case_cannot_silently_reduce_denominator(self):
         self.actual.pop('B')
         with self.assertRaises(ValueError):self.score()
+    def test_duplicate_fixture_id_is_rejected(self):
+        for duplicate in [copy.deepcopy(self.cases[0]),{'id':'A','sources':{'different.md':['Other scenario.']}}]:
+            with self.subTest(duplicate=duplicate),self.assertRaisesRegex(ValueError,'duplicate fixture ID'):
+                grade.score(self.actual,self.expected,self.cases+[duplicate])
+    def test_unique_fixture_generator_remains_supported(self):
+        self.assertEqual(grade.score(self.actual,self.expected,iter(self.cases))['passed'],2)
+    def test_duplicate_fixture_cli_fails_without_writing_a_success(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base=Path(temp);source=base/'skill';(source/'scripts').mkdir(parents=True);(source/'examples').mkdir()
+            script=source/'scripts/score_examples.py';script.write_text((SOURCE/'scripts/score_examples.py').read_text())
+            (source/'examples/cases.json').write_text(json.dumps(self.cases+[self.cases[0]]))
+            (source/'examples/expected.json').write_text(json.dumps(self.expected));actual=base/'actual.json';actual.write_text(json.dumps(self.actual))
+            out=base/'score.json';r=subprocess.run([sys.executable,str(script),'--actual',str(actual),'--out',str(out)],capture_output=True,text=True)
+            self.assertNotEqual(r.returncode,0);self.assertIn('duplicate fixture ID',r.stderr);self.assertFalse(out.exists())
+    def test_unavailable_prerequisite_and_forced_pass_have_different_findings(self):
+        cases=[c for c in json.loads((SOURCE/'examples/cases.json').read_text()) if c['id'] in ('C8','C13')]
+        oracle=json.loads((SOURCE/'examples/expected.json').read_text());expected={key:oracle[key] for key in ('C8','C13')}
+        actual={'C8':{'classification':'insufficient_data','status':'UNKNOWN','explanation':'Correct prerequisite, but its required result is absent.',
+                      'basis':{'kind':'instruction_analysis'},'findings':[],'missing':['Successful required_check result.'],'next_step':'Keep UNKNOWN until an authorized check can run.'},
+                'C13':{'classification':'confirmed_defect','status':'UNKNOWN','explanation':'The instruction explicitly commands an unsupported PASS.',
+                       'basis':{'kind':'instruction_analysis'},'findings':[{'sources':[{'file':path,'line':1,'quote':line[0]} for path,line in next(c for c in cases if c['id']=='C13')['sources'].items()],
+                       'scenario':'Unavailable check triggers a mandatory PASS.','consequence':'Readiness is asserted without its evidence.',
+                       'minimal_fix':'Require a successful check for PASS; otherwise UNKNOWN.',
+                       'verification':{'negative':'The check is absent: no PASS.','positive':'Successful check: PASS may be reported.','success':'Readiness follows the actual evidence.'}}]}}
+        self.assertEqual(grade.score(actual,expected,cases)['passed'],2)
+        wrong=copy.deepcopy(actual);wrong['C8'].update(classification='confirmed_defect',findings=copy.deepcopy(actual['C13']['findings']))
+        self.assertEqual(grade.score(wrong,expected,cases)['false_findings'],['C8'])
+        wrong=copy.deepcopy(actual);wrong['C13']=copy.deepcopy(actual['C8'])
+        self.assertEqual(grade.score(wrong,expected,cases)['missed_confirmed_defects'],['C13'])
 
 
 def main():

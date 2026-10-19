@@ -58,6 +58,10 @@ def validate(observed, case, oracle):
 
 def score(actual, expected, cases=None):
     if not isinstance(actual, dict) or set(actual) != set(expected): raise ValueError('exactly the fixture IDs are required')
+    if cases is not None:
+        cases = list(cases)
+        if len({c['id'] for c in cases}) != len(cases):
+            raise ValueError('duplicate fixture ID; each scenario requires a unique ID')
     source_cases = {c['id']: c for c in cases} if cases is not None else None
     if source_cases is not None and set(source_cases) != set(expected): raise ValueError('case/expectation IDs differ')
     rows = []

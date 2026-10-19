@@ -91,15 +91,22 @@ def compare(before, after):
     added, removed = sorted(b.keys() - a.keys()), sorted(a.keys() - b.keys())
     changed = sorted(k for k in a.keys() & b.keys() if a[k] != b[k])
     ac, bc = before['context'], after['context']
-    context_keys = sorted(k for k in ac.keys() | bc.keys() if ac.get(k) != bc.get(k) or (k in ac) != (k in bc))
+    def canonical(value):
+        return json.dumps(value, sort_keys=True, allow_nan=False, separators=(',', ':'))
+    context_keys = sorted(k for k in ac.keys() | bc.keys()
+                          if (k in ac) != (k in bc) or canonical(ac.get(k)) != canonical(bc.get(k)))
     scope_changed = scope(before) != scope(after)
-    issues = after.get('coverage_issues', []) or [
-        {'path': name, 'reason': value['status']} for name, value in b.items() if 'status' in value]
+    def coverage(s):
+        return s.get('coverage_issues', []) or [
+            {'path': name, 'reason': value['status']} for name, value in s['files'].items() if 'status' in value]
+    before_issues, issues = coverage(before), coverage(after)
     return {'added': added, 'removed': removed, 'changed': changed,
             'context_changed': bool(context_keys), 'context_changed_keys': context_keys,
             'scope_changed': scope_changed, 'coverage_issues': issues,
+            'before_coverage_issues': before_issues, 'after_coverage_issues': issues,
+            'coverage_changed': before_issues != issues, 'rebaseline_required': bool(before_issues),
             'metadata_changed': before.get('metadata', {}) != after.get('metadata', {}),
-            'assessment': 'INCOMPLETE' if issues else 'CHANGED' if added or removed or changed or context_keys or scope_changed else 'NO_RECORDED_CHANGE',
+            'assessment': 'INCOMPLETE' if before_issues or issues else 'CHANGED' if added or removed or changed or context_keys or scope_changed else 'NO_RECORDED_CHANGE',
             'limitations': 'Only declared scope/context compared; no semantic PASS or dependency completeness inferred.'}
 
 

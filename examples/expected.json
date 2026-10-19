@@ -72,13 +72,10 @@
     ]
   },
   "C8": {
-    "classification": "confirmed_defect",
-    "status": "FAIL",
-    "explanation": "Обязательный единственный метод недоступен в заданной среде; инструкция не имеет исполнимой ветки. Исправить маршрут или указать UNKNOWN и следующий шаг, не подставлять PASS.",
-    "must_cite": [
-      "rules.md:1",
-      "tools.txt:1"
-    ],
+    "classification": "insufficient_data",
+    "status": "UNKNOWN",
+    "explanation": "Обязательное условие корректно и предусматривает остановку. Недоступность метода не доказывает дефект правила; готовность UNKNOWN, поскольку отсутствует результат required_check. Не ослаблять критерий; назвать недостающую проверку и разрешённый следующий шаг.",
+    "must_cite": [],
     "basis_kinds": [
       "instruction_analysis"
     ]
@@ -121,6 +118,18 @@
     "status": "NO_CHANGE",
     "explanation": "Рабочее ограниченное правило не нуждается в исправлении ради пунктуации или единообразия.",
     "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C13": {
+    "classification": "confirmed_defect",
+    "status": "UNKNOWN",
+    "explanation": "Инструкция прямо требует заявить PASS без выполненной проверки. Это подтверждённый дефект правила готовности; сам критерий остаётся UNKNOWN. Минимум: разрешать PASS только после успешной проверки, иначе UNKNOWN/остановка. Корректное обязательное условие C8 не менять.",
+    "must_cite": [
+      "rules.md:1",
+      "tools.txt:1"
+    ],
     "basis_kinds": [
       "instruction_analysis"
     ]
