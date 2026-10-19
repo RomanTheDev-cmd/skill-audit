@@ -98,6 +98,7 @@ class PacketTests(unittest.TestCase):
         cases=[case for case in rio.read_json(SOURCE/'examples/transfer/cases.json') if case['id']=='T4']
         oracle={'T4':rio.read_json(SOURCE/'examples/transfer/expected.json')['T4']}
         actual={'T4':{'classification':'insufficient_data','status':'STALE',
+            'status_target':cases[0]['status_target'],
             'explanation':'Checker changed; no current result or unsupported new PASS claim is supplied.',
             'basis':{'kind':'instruction_analysis'},'findings':[],
             'missing':['Current checker result.'],'next_step':'Keep old result STALE and obtain the current check.'}}
@@ -106,6 +107,39 @@ class PacketTests(unittest.TestCase):
         actual['T4']['findings']=[{'scenario':'unsupported invented claim'}]
         result=suite.evaluate(packet,suite.submit(packet,actual),oracle)
         self.assertEqual(result['false_findings'],['T4']);self.assertEqual(result['passed'],0)
+    def test_wrong_or_missing_status_target_is_rejected(self):
+        self.cases[0]['status_target']='rule_change_needed';packet=suite.prepare(self.cases)
+        for target in (None,'other_criterion'):
+            with self.subTest(target=target):
+                actual=copy.deepcopy(self.actual)
+                if target is not None:actual['A']['status_target']=target
+                result=suite.evaluate(packet,suite.submit(packet,actual),self.oracle)
+                self.assertEqual(result['passed'],0);self.assertIn('status_target',result['cases'][0]['structure_errors'][0])
+        actual=copy.deepcopy(self.actual);actual['A']['status_target']='rule_change_needed'
+        self.assertEqual(suite.evaluate(packet,suite.submit(packet,actual),self.oracle)['passed'],1)
+    def test_declared_status_target_must_be_a_nonempty_id(self):
+        for target in ('',False,{},None):
+            with self.subTest(target=target),self.assertRaisesRegex(ValueError,'status_target'):
+                case=copy.deepcopy(self.cases[0]);case['status_target']=target;suite.prepare([case])
+    def test_explicit_new_unsupported_pass_is_detected_beside_historical_control(self):
+        cases=[case for case in rio.read_json(SOURCE/'examples/transfer/cases.json') if case['id'] in ('T4','T7')]
+        expected=rio.read_json(SOURCE/'examples/transfer/expected.json');oracle={key:expected[key] for key in ('T4','T7')}
+        historical=next(case for case in cases if case['id']=='T4');current=next(case for case in cases if case['id']=='T7')
+        actual={'T4':{'classification':'insufficient_data','status':'STALE','status_target':historical['status_target'],
+                     'explanation':'Old result is stale; no unsupported current claim is supplied.',
+                     'basis':{'kind':'instruction_analysis'},'findings':[],'missing':['Current result.'],'next_step':'Obtain current verification.'},
+                'T7':{'classification':'confirmed_defect','status':'FAIL','status_target':current['status_target'],
+                      'explanation':'The new current PASS claim relies on a different checker without a new check.',
+                      'basis':{'kind':'instruction_analysis'},'findings':[{
+                          'sources':[{'file':name,'line':1,'quote':lines[0]} for name,lines in current['sources'].items()],
+                          'scenario':'Checker changed, and current-report explicitly asserts its PASS from old data.',
+                          'consequence':'User receives unsupported readiness for the current checker.',
+                          'minimal_fix':'Withdraw current PASS; retain historical result as STALE and obtain current evidence.',
+                          'verification':{'negative':'New unsupported PASS is flagged.','positive':'Historical report alone is not defective.','success':'Both paired cases retain their distinct conclusions.'}}]}}
+        packet=suite.prepare(cases);self.assertEqual(suite.evaluate(packet,suite.submit(packet,actual),oracle)['passed'],2)
+        actual['T7'].update(classification='no_issue',findings=[])
+        result=suite.evaluate(packet,suite.submit(packet,actual),oracle)
+        self.assertEqual(result['missed_confirmed_defects'],['T7']);self.assertEqual(result['passed'],1)
 
 
 class PublicationTests(unittest.TestCase):

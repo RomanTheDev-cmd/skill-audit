@@ -11,8 +11,10 @@ SOURCE = Path(__file__).resolve().parents[1]
 
 
 def prepare(cases):
-    if not isinstance(cases, list) or any(not isinstance(case, dict) or set(case) - {'id', 'scenario', 'sources', 'available'} for case in cases):
-        raise ValueError('cases must contain only input fields: id, scenario, sources, available')
+    if not isinstance(cases, list) or any(not isinstance(case, dict) or set(case) - {'id', 'scenario', 'sources', 'available', 'status_target'} for case in cases):
+        raise ValueError('cases must contain only input fields: id, scenario, sources, available, status_target')
+    if any('status_target' in case and (not isinstance(case['status_target'], str) or not case['status_target'].strip()) for case in cases):
+        raise ValueError('status_target must be a nonempty criterion ID')
     ids = [case['id'] for case in cases]
     if not ids or len(set(ids)) != len(ids): raise ValueError('nonempty unique case IDs required')
     return {'schema': 1, 'cases': cases, 'cases_sha256': value_hash(cases),

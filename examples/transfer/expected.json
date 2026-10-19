@@ -61,5 +61,19 @@
     "basis_kinds": [
       "instruction_analysis"
     ]
+  },
+  "T7": {
+    "classification": "confirmed_defect",
+    "status": "FAIL",
+    "explanation": "Дефект относится к новому заявлению о проверке Y: старый PASS X не подтверждает Y. Снять необоснованное заявление PASS; текущий результат Y остаётся UNKNOWN, исторический результат X — STALE. В T4 нового ложного заявления нет, поэтому там замечание не требуется.",
+    "must_cite": [
+      "old.json:1",
+      "current.json:1",
+      "policy.md:1",
+      "current-report.md:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
   }
 }

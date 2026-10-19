@@ -22,5 +22,10 @@
   },
   "T6": {
     "origin": "synthetic positive control"
+  },
+  "T7": {
+    "origin": "negative control paired with T4 after oracle correction",
+    "source": "T4 historical result plus explicit new unsupported PASS claim",
+    "purpose": "Detect unsupported current PASS without inventing a defect in a historical report."
   }
 }

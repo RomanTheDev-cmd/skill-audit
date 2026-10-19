@@ -16,7 +16,8 @@
         "{\"context_changed\":false,\"assessment\":\"NO_RECORDED_CHANGE\"}"
       ]
     },
-    "available": "Файлы относятся к одному сравнению; оба режима использованы этим checker."
+    "available": "Файлы относятся к одному сравнению; оба режима использованы этим checker.",
+    "status_target": "context_comparison_correctness"
   },
   {
     "id": "T2",
@@ -32,7 +33,8 @@
         "source_cases = {c[\"id\"]: c for c in cases}"
       ]
     },
-    "available": "Два сценария C1 имеют разные входы; список записей перед преобразованием сохранён."
+    "available": "Два сценария C1 имеют разные входы; список записей перед преобразованием сохранён.",
+    "status_target": "scenario_set_completeness"
   },
   {
     "id": "T3",
@@ -51,7 +53,8 @@
         "После анализа ранее пропущенной области явно принять полный after как новый baseline."
       ]
     },
-    "available": "Сценарий относится к актуальной версии механизма снимков."
+    "available": "Сценарий относится к актуальной версии механизма снимков.",
+    "status_target": "baseline_rule_change_needed"
   },
   {
     "id": "T4",
@@ -67,7 +70,8 @@
         "Значимые зависимости: input и checker."
       ]
     },
-    "available": "Хеши X и Y различаются. В отчёте нет результата запуска Y."
+    "available": "Хеши X и Y различаются. В отчёте нет результата запуска Y.",
+    "status_target": "historical_result_currency"
   },
   {
     "id": "T5",
@@ -80,7 +84,8 @@
         "Процесс остановлен до получения кода завершения."
       ]
     },
-    "available": "Остальные первичные результаты и сведения о фактическом завершении отсутствуют."
+    "available": "Остальные первичные результаты и сведения о фактическом завершении отсутствуют.",
+    "status_target": "current_result_readiness"
   },
   {
     "id": "T6",
@@ -96,6 +101,27 @@
         "Для данного критерия срок действия не задан; зависимости — input, checker, artifact."
       ]
     },
-    "available": "Все три указанных хеша заново сверены и совпадают. Других значимых изменений не выявлено."
+    "available": "Все три указанных хеша заново сверены и совпадают. Других значимых изменений не выявлено.",
+    "status_target": "rule_or_repeat_change_needed"
+  },
+  {
+    "id": "T7",
+    "scenario": "Проверить обоснованность нового заявления PASS в current-report.md.",
+    "sources": {
+      "old.json": [
+        "PASS; input_sha256=A; checker_sha256=X"
+      ],
+      "current.json": [
+        "input_sha256=A; checker_sha256=Y"
+      ],
+      "policy.md": [
+        "Значимые зависимости: input и checker."
+      ],
+      "current-report.md": [
+        "Текущая проверка Y: PASS. Основание — old.json; новый запуск не выполнялся."
+      ]
+    },
+    "available": "Checker изменился с X на Y. Кроме показанных материалов, результатов проверки Y нет.",
+    "status_target": "current_pass_claim_validity"
   }
 ]

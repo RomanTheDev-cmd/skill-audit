@@ -17,6 +17,8 @@ def nonempty(value):
 
 def validate(observed, case, oracle):
     errors, citations = [], set()
+    if 'status_target' in case and observed.get('status_target') != case['status_target']:
+        errors.append('status_target must match the requested criterion ID')
     basis = observed.get('basis', {})
     if not isinstance(basis, dict): basis = {}
     if not isinstance(basis, dict) or basis.get('kind') not in BASIS:
