@@ -1,0 +1,128 @@
+{
+  "C1": {
+    "classification": "confirmed_defect",
+    "status": "FAIL",
+    "explanation": "В одном сценарии поддержки требуют одновременно ON и OFF. Минимум: убрать ошибочное требование либо ограничить его область; проверить совместимость и допустимую ветку.",
+    "must_cite": [
+      "rules.md:1",
+      "rules.md:2"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C2": {
+    "classification": "confirmed_defect",
+    "status": "STALE",
+    "explanation": "Хеш значимого входа отличается, старый PASS не актуален. Минимум: инвалидировать результат и проверить изменённый вход; неизменённый хеш должен сохранять актуальность.",
+    "must_cite": [
+      "state.json:1",
+      "report.json:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C3": {
+    "classification": "confirmed_defect",
+    "status": "UNKNOWN",
+    "explanation": "Дефект — необоснованная заявка готовности. Mesh не доказывает нагрузку. Минимум: снять PASS нагрузки, указать UNKNOWN и требуемое испытание/расчёт. Нет доказательства, что сама деталь ломается.",
+    "must_cite": [
+      "report.md:1",
+      "mesh.log:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C4": {
+    "classification": "no_issue",
+    "status": "NO_CHANGE",
+    "explanation": "Корректное ограниченное правило с UNKNOWN при отсутствии входа. Правка не требуется; нет повода придумывать замечание ради стиля.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C5": {
+    "classification": "insufficient_data",
+    "status": "UNKNOWN",
+    "explanation": "Неизвестны метод, условия и привязка; нельзя доказать ни герметичность, ни изменение файла, ни дефект правила. Запросить первичные данные, не выдавать STALE только по возрасту.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C6": {
+    "classification": "no_issue",
+    "status": "NO_CHANGE",
+    "explanation": "Явное пользовательское исключение заменяет умолчание; одновременных несовместимых требований нет.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C7": {
+    "classification": "no_issue",
+    "status": "PASS",
+    "explanation": "Срока действия нет, все значимые входы/инструмент/артефакт совпали. Давность не отменяет результат.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C8": {
+    "classification": "confirmed_defect",
+    "status": "FAIL",
+    "explanation": "Обязательный единственный метод недоступен в заданной среде; инструкция не имеет исполнимой ветки. Исправить маршрут или указать UNKNOWN и следующий шаг, не подставлять PASS.",
+    "must_cite": [
+      "rules.md:1",
+      "tools.txt:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C9": {
+    "classification": "confirmed_defect",
+    "status": "FAIL",
+    "explanation": "По заданному логу повторяется один детерминированный отказ отсутствующего входа; обязательный одинаковый повтор не устраняет причину.",
+    "must_cite": [
+      "rules.md:1",
+      "run.log:1"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C10": {
+    "classification": "no_issue",
+    "status": "PASS",
+    "explanation": "По установленному графу обложка не влияет на units_check; повторять независимый тест не требуется.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C11": {
+    "classification": "possible_risk",
+    "status": "UNKNOWN",
+    "explanation": "Авария и потеря не наблюдались, обязательное возобновление не задано. Хранение в памяти может дать потерю после обрыва; это условный риск.",
+    "must_cite": [
+      "workflow.md:1",
+      "workflow.md:2"
+    ],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  },
+  "C12": {
+    "classification": "no_issue",
+    "status": "NO_CHANGE",
+    "explanation": "Рабочее ограниченное правило не нуждается в исправлении ради пунктуации или единообразия.",
+    "must_cite": [],
+    "basis_kinds": [
+      "instruction_analysis"
+    ]
+  }
+}
